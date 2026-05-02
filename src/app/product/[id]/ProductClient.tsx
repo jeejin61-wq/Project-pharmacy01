@@ -19,6 +19,17 @@ import {
   Activity,
   FlaskConical,
   MessageCircle,
+  Bug,
+  Sun,
+  Eye,
+  Heart,
+  Shield,
+  Pill,
+  Scissors,
+  Flame,
+  Snowflake,
+  Baby,
+  Smile,
   type LucideIcon,
 } from 'lucide-react'
 import type { Product, ProductTranslation, UsageArea } from '@/types/product'
@@ -47,6 +58,18 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Lightbulb,
   Clock,
   Droplets,
+  Bug,
+  Sun,
+  Eye,
+  Heart,
+  Shield,
+  Pill,
+  Scissors,
+  Flame,
+  Snowflake,
+  Baby,
+  Smile,
+  Sparkles,
 }
 
 function UsageAreaIcon({ iconName }: { iconName: string }) {

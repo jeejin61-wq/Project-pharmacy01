@@ -339,12 +339,35 @@ function TranslationEditor({
         <div className="space-y-2">
           {usageAreas.map((area, i) => (
             <div key={i} className="flex gap-1.5 items-center">
-              <input
-                className="w-24 border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              <select
+                className="w-36 border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={area.icon}
                 onChange={(e) => setUsageAreas(usageAreas.map((a, idx) => idx === i ? { ...a, icon: e.target.value } : a))}
-                placeholder="Wind"
-              />
+              >
+                <option value="">아이콘 선택</option>
+                <option value="Bug">🪲 벌레</option>
+                <option value="Hand">✋ 손/가려움</option>
+                <option value="Droplets">💧 물방울/땀</option>
+                <option value="Sun">☀️ 햇빛/자외선</option>
+                <option value="Eye">👁 눈</option>
+                <option value="Heart">❤️ 심장/혈관</option>
+                <option value="Sparkles">✨ 미용/재생</option>
+                <option value="Shield">🛡 보호/면역</option>
+                <option value="Pill">💊 약/복용</option>
+                <option value="Flame">🔥 열/화상</option>
+                <option value="Snowflake">❄️ 냉감/진정</option>
+                <option value="Scissors">✂️ 수술/시술</option>
+                <option value="Wind">💨 바람/호흡</option>
+                <option value="Footprints">👣 발</option>
+                <option value="Baby">👶 아기/소아</option>
+                <option value="Smile">😊 얼굴</option>
+                <option value="Target">🎯 부위/타겟</option>
+                <option value="MapPin">📍 위치</option>
+                <option value="Lightbulb">💡 팁</option>
+                <option value="Clock">🕐 시간</option>
+                <option value="FlaskConical">🧪 성분</option>
+                <option value="Activity">📈 기타</option>
+              </select>
               <input
                 className="flex-1 border border-gray-200 rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 value={area.name}
@@ -569,12 +592,35 @@ function ProductForm({
               <div className="space-y-2">
                 {usageAreas.map((area, i) => (
                   <div key={i} className="flex gap-1.5 items-center">
-                    <input
-                      className="w-14 border border-gray-200 rounded-lg px-2 py-2 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    <select
+                      className="w-36 border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={area.icon}
                       onChange={(e) => setUsageAreas(usageAreas.map((a, idx) => idx === i ? { ...a, icon: e.target.value } : a))}
-                      placeholder="💊"
-                    />
+                    >
+                      <option value="">아이콘 선택</option>
+                      <option value="Bug">🪲 벌레</option>
+                      <option value="Hand">✋ 손/가려움</option>
+                      <option value="Droplets">💧 물방울/땀</option>
+                      <option value="Sun">☀️ 햇빛/자외선</option>
+                      <option value="Eye">👁 눈</option>
+                      <option value="Heart">❤️ 심장/혈관</option>
+                      <option value="Sparkles">✨ 미용/재생</option>
+                      <option value="Shield">🛡 보호/면역</option>
+                      <option value="Pill">💊 약/복용</option>
+                      <option value="Flame">🔥 열/화상</option>
+                      <option value="Snowflake">❄️ 냉감/진정</option>
+                      <option value="Scissors">✂️ 수술/시술</option>
+                      <option value="Wind">💨 바람/호흡</option>
+                      <option value="Footprints">👣 발</option>
+                      <option value="Baby">👶 아기/소아</option>
+                      <option value="Smile">😊 얼굴</option>
+                      <option value="Target">🎯 부위/타겟</option>
+                      <option value="MapPin">📍 위치</option>
+                      <option value="Lightbulb">💡 팁</option>
+                      <option value="Clock">🕐 시간</option>
+                      <option value="FlaskConical">🧪 성분</option>
+                      <option value="Activity">📈 기타</option>
+                    </select>
                     <input
                       className="flex-1 border border-gray-200 rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                       value={area.name}
