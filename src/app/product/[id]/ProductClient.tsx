@@ -267,10 +267,9 @@ export default function ProductClient({ product, priceFormatted }: { product: Pr
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
-      <div className="max-w-md mx-auto pb-10">
+      <div className="max-w-md mx-auto pb-10 px-4">
 
-        {/* ─── 상단 헤더 카드 ─── */}
-        <div className="bg-white mb-3">
+        <div className="bg-white mb-3 rounded-2xl shadow-sm overflow-hidden">
           <div className="px-4 pt-5 pb-1 flex items-center gap-2">
             {product.category && (
               <span className="inline-flex items-center bg-[#e0f2fe] text-[#0284c7] text-xs font-semibold px-2.5 py-1 rounded-full">
