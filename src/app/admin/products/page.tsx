@@ -846,7 +846,7 @@ export default function AdminProductsPage() {
                     <tr key={p.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3 text-gray-400 font-mono text-xs">#{p.id}</td>
                       <td className="px-4 py-3">
-                        <div className="font-medium text-gray-900">{p.name}</div>
+                        <a href={`/product/${p.id}`} target="_blank" rel="noopener noreferrer" className="font-medium text-blue-600 hover:text-blue-800 hover:underline">{p.name}</a>
                         {p.barcode && <div className="text-xs text-gray-400 font-mono">{p.barcode}</div>}
                       </td>
                       <td className="px-4 py-3 hidden sm:table-cell">
