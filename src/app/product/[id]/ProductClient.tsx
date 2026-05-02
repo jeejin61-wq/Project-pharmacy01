@@ -258,7 +258,12 @@ export default function ProductClient({ product, priceFormatted }: { product: Pr
   const side_effects_note = getField(product, lang, 'side_effects_note') as string | null
   const tips = getField(product, lang, 'tips') as string[] | null
   const recommended_for = getField(product, lang, 'recommended_for') as string[] | null
-  const usage_areas = getField(product, lang, 'usage_areas') as UsageArea[] | null
+  const raw_usage_areas = getField(product, lang, 'usage_areas') as UsageArea[] | null
+  const ko_usage_areas = product.usage_areas as UsageArea[] | null
+  const usage_areas = raw_usage_areas?.map((area, i) => ({
+    ...area,
+    icon: ko_usage_areas?.[i]?.icon ?? area.icon,
+  })) ?? null
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">
