@@ -295,12 +295,11 @@ export default function ProductClient({ product, priceFormatted }: { product: Pr
             {product.image_url && (
               // eslint-disable-next-line @next/next/no-img-element
               <div className="mt-4 flex justify-center">
-                <div className="relative w-44 h-44 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center">
-                  {/* Using next/image via img tag workaround for external URLs */}
+                <div className="w-48 h-48 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50 flex items-center justify-center shadow-sm">
                   <img
                     src={product.image_url}
                     alt={name}
-                    className="object-contain p-2 w-full h-full"
+                    className="object-contain w-full h-full p-3"
                   />
                 </div>
               </div>

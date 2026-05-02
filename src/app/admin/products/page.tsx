@@ -1,9 +1,134 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Product, ProductInsert, ProductUpdate, ProductTranslation } from '@/types/product'
 import Link from 'next/link'
+
+// ─── 이미지 업로드 컴포넌트 ──────────────────────────────────
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+
+function ImageUploader({
+  productId,
+  currentUrl,
+  onUploaded,
+}: {
+  productId?: number
+  currentUrl: string | null
+  onUploaded: (url: string | null) => void
+}) {
+  const [uploading, setUploading] = useState(false)
+  const [preview, setPreview] = useState<string | null>(currentUrl)
+  const [error, setError] = useState<string | null>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const handleFile = async (file: File) => {
+    setError(null)
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setError('JPG, PNG, WEBP 파일만 업로드 가능합니다.')
+      return
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setError('파일 크기는 5MB 이하여야 합니다.')
+      return
+    }
+
+    const ext = file.name.split('.').pop()
+    const timestamp = Date.now()
+    const idPart = productId ?? 'new'
+    const fileName = `product_${idPart}_${timestamp}.${ext}`
+
+    setUploading(true)
+    const { data, error: uploadError } = await supabase.storage
+      .from('product-images')
+      .upload(fileName, file, { upsert: true, contentType: file.type })
+
+    if (uploadError) {
+      setError('업로드 실패: ' + uploadError.message)
+      setUploading(false)
+      return
+    }
+
+    const { data: urlData } = supabase.storage
+      .from('product-images')
+      .getPublicUrl(data.path)
+
+    const publicUrl = urlData.publicUrl
+    setPreview(publicUrl)
+    onUploaded(publicUrl)
+    setUploading(false)
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) handleFile(file)
+    e.target.value = ''
+  }
+
+  const handleRemove = () => {
+    setPreview(null)
+    onUploaded(null)
+  }
+
+  return (
+    <div>
+      <label className="block text-xs font-medium text-gray-500 mb-1.5">제품 이미지</label>
+      {preview ? (
+        <div className="flex items-start gap-3">
+          <div className="w-24 h-24 rounded-xl border border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center flex-shrink-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={preview} alt="제품 이미지" className="w-full h-full object-contain p-1" />
+          </div>
+          <div className="flex flex-col gap-1.5 pt-1">
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              className="text-xs text-blue-600 hover:underline font-medium"
+            >
+              이미지 교체
+            </button>
+            <button
+              type="button"
+              onClick={handleRemove}
+              className="text-xs text-red-500 hover:underline font-medium"
+            >
+              이미지 삭제
+            </button>
+            {uploading && <span className="text-xs text-gray-400">업로드 중...</span>}
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="w-full border-2 border-dashed border-gray-200 rounded-xl py-5 flex flex-col items-center gap-2 hover:border-blue-400 hover:bg-blue-50 transition-colors disabled:opacity-50"
+        >
+          {uploading ? (
+            <div className="animate-spin rounded-full h-6 w-6 border-2 border-blue-600 border-t-transparent" />
+          ) : (
+            <svg className="w-7 h-7 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+          )}
+          <span className="text-xs text-gray-400">
+            {uploading ? '업로드 중...' : '클릭하여 이미지 업로드 (JPG, PNG, WEBP · 최대 5MB)'}
+          </span>
+        </button>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        className="hidden"
+        onChange={handleChange}
+      />
+      {error && <p className="text-xs text-red-500 mt-1.5">{error}</p>}
+    </div>
+  )
+}
 
 // ─── 상수 ───────────────────────────────────────────────────
 
@@ -285,9 +410,9 @@ function TranslationEditor({
 // ─── 폼 ─────────────────────────────────────────────────────
 
 function ProductForm({
-  initial, onSubmit, onCancel, loading,
+  initial, onSubmit, onCancel, loading, productId,
 }: {
-  initial: ProductInsert; onSubmit: (data: ProductInsert) => void; onCancel: () => void; loading: boolean
+  initial: ProductInsert; onSubmit: (data: ProductInsert) => void; onCancel: () => void; loading: boolean; productId?: number
 }) {
   const [form, setForm] = useState<ProductInsert>(initial)
   const [tab, setTab] = useState<Tab>('기본정보')
@@ -396,8 +521,11 @@ function ProductForm({
               <input className={inputCls} value={form.volume ?? ''} onChange={(e) => set('volume', e.target.value || null)} placeholder="13g, 20mL 등" />
             </div>
             <div className="col-span-2">
-              <label className={labelCls}>제품 이미지 URL</label>
-              <input className={inputCls} value={form.image_url ?? ''} onChange={(e) => set('image_url', e.target.value || null)} placeholder="https://..." />
+              <ImageUploader
+                productId={productId}
+                currentUrl={form.image_url ?? null}
+                onUploaded={(url) => set('image_url', url)}
+              />
             </div>
             <div className="col-span-2">
               <label className={labelCls}>제품 한줄 설명</label>
@@ -801,6 +929,7 @@ export default function AdminProductsPage() {
             onSubmit={handleEdit}
             onCancel={() => setEditProduct(null)}
             loading={formLoading}
+            productId={editProduct.id}
           />
         )}
       </Modal>
