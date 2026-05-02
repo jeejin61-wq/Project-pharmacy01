@@ -17,3 +17,6 @@ https://nextjs.org/telemetry
  ✓ Compiled in 94ms (219 modules)
  ○ Compiling /admin/qr ...
  ✓ Compiled /admin/qr in 1362ms (700 modules)
+   Reload env: .env.local
+ ✓ Compiled in 378ms (700 modules)
+ ✓ Compiled /not-found in 481ms (710 modules)

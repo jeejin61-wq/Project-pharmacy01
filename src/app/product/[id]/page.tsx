@@ -2,6 +2,7 @@ import { supabase } from '@/lib/supabase'
 import { Product } from '@/types/product'
 import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
+import Image from 'next/image'
 
 interface Props {
   params: { id: string }
@@ -10,7 +11,7 @@ interface Props {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { data } = await supabase
     .from('products')
-    .select('name, manufacturer')
+    .select('name, manufacturer, description')
     .eq('id', params.id)
     .single()
 
@@ -18,38 +19,30 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${data.name} - 제품 정보`,
-    description: `${data.manufacturer ?? ''} | ${data.name}`,
+    description: data.description ?? `${data.manufacturer ?? ''} | ${data.name}`,
   }
 }
 
-function StockIndicator({ stock, optimal }: { stock: number | null; optimal: number | null }) {
-  if (stock === null) return null
-  const ratio = optimal ? stock / optimal : 1
-  const color = ratio >= 0.7 ? 'bg-emerald-500' : ratio >= 0.3 ? 'bg-amber-400' : 'bg-red-500'
-  const label = ratio >= 0.7 ? '충분' : ratio >= 0.3 ? '보통' : '부족'
-  const textColor = ratio >= 0.7 ? 'text-emerald-600' : ratio >= 0.3 ? 'text-amber-600' : 'text-red-600'
-  const bgColor = ratio >= 0.7 ? 'bg-emerald-50' : ratio >= 0.3 ? 'bg-amber-50' : 'bg-red-50'
-  const percent = Math.min(100, Math.round(ratio * 100))
+// ─── 소섹션 컴포넌트 ─────────────────────────────────────────
 
+function SectionCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={`rounded-2xl p-4 ${bgColor}`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-gray-600">재고 현황</span>
-        <span className={`text-sm font-bold ${textColor}`}>{label}</span>
-      </div>
-      <div className="flex items-end gap-2 mb-3">
-        <span className={`text-2xl font-bold ${textColor}`}>{stock.toLocaleString()}</span>
-        {optimal && <span className="text-sm text-gray-400 mb-0.5">/ {optimal.toLocaleString()} 적정</span>}
-      </div>
-      <div className="h-2 bg-white/70 rounded-full overflow-hidden">
-        <div
-          className={`h-full ${color} rounded-full transition-all`}
-          style={{ width: `${percent}%` }}
-        />
-      </div>
+    <div className={`bg-white rounded-2xl shadow-sm overflow-hidden ${className}`}>
+      {children}
     </div>
   )
 }
+
+function SectionHeader({ icon, title }: { icon: string; title: string }) {
+  return (
+    <div className="flex items-center gap-2 px-4 pt-4 pb-2">
+      <span className="text-lg">{icon}</span>
+      <span className="font-bold text-gray-800 text-sm">{title}</span>
+    </div>
+  )
+}
+
+// ─── 메인 페이지 ─────────────────────────────────────────────
 
 export default async function ProductPage({ params }: Props) {
   const { data: product, error } = await supabase
@@ -60,100 +53,292 @@ export default async function ProductPage({ params }: Props) {
 
   if (error || !product) notFound()
 
-  const priceFormatted = product.price ? `₩${product.price.toLocaleString()}` : '가격 정보 없음'
+  const priceFormatted = product.price ? `₩${product.price.toLocaleString()}` : null
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-600 to-blue-700">
-      {/* Header */}
-      <div className="px-5 pt-12 pb-8">
-        <div className="flex items-center gap-2 mb-6">
-          <div className="w-7 h-7 bg-white/20 rounded-lg flex items-center justify-center">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
-          </div>
-          <span className="text-white/80 text-sm font-medium">약국 제품 정보</span>
-        </div>
+    <div className="min-h-screen bg-[#f0f2f5]">
+      <div className="max-w-md mx-auto pb-10">
 
-        <div className="text-white/60 text-xs font-mono mb-1 tracking-wider">
-          PRODUCT #{String(product.id).padStart(4, '0')}
-        </div>
-        <h1 className="text-white text-2xl font-bold leading-tight mb-1">{product.name}</h1>
-        {product.manufacturer && (
-          <p className="text-blue-200 text-sm">{product.manufacturer}</p>
-        )}
-      </div>
-
-      {/* Content Card */}
-      <div className="bg-gray-50 min-h-screen rounded-t-3xl px-5 pt-8 pb-10">
-        {/* Price + Unit */}
-        <div className="flex items-center justify-between bg-white rounded-2xl p-5 mb-4 shadow-sm border border-gray-100">
-          <div>
-            <div className="text-xs text-gray-400 mb-1 font-medium uppercase tracking-wide">판매가격</div>
-            <div className="text-3xl font-bold text-blue-700">{priceFormatted}</div>
+        {/* ─── 상단 헤더 카드 ─── */}
+        <div className="bg-white mb-3">
+          {/* 카테고리 태그 */}
+          <div className="px-4 pt-5 pb-1 flex items-center gap-2">
+            {product.category && (
+              <span className="inline-flex items-center bg-green-100 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full">
+                {product.category}
+              </span>
+            )}
           </div>
-          {product.unit && (
-            <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-2 text-center">
-              <div className="text-xs text-blue-400 mb-0.5">단위</div>
-              <div className="text-lg font-bold text-blue-700">{product.unit}</div>
+
+          <div className="px-4 pb-4">
+            <h1 className="text-xl font-bold text-gray-900 leading-tight mt-1">{product.name}</h1>
+            {product.volume && (
+              <p className="text-sm text-gray-400 mt-0.5">{product.volume}</p>
+            )}
+
+            <div className="flex items-end gap-2 mt-3">
+              {priceFormatted ? (
+                <span className="text-3xl font-extrabold text-green-600">{priceFormatted}</span>
+              ) : (
+                <span className="text-xl font-bold text-gray-400">가격 정보 없음</span>
+              )}
+              {product.price_per_unit && (
+                <span className="text-xs text-gray-400 mb-1">{product.price_per_unit}</span>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* Stock */}
-        <div className="mb-4">
-          <StockIndicator stock={product.stock} optimal={product.optimal_stock} />
-        </div>
-
-        {/* Indication */}
-        {product.indication && (
-          <div className="bg-white rounded-2xl p-5 mb-4 shadow-sm border border-gray-100">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 bg-blue-100 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+            {/* 제품 이미지 */}
+            {product.image_url ? (
+              <div className="mt-4 flex justify-center">
+                <div className="relative w-44 h-44 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50">
+                  <Image
+                    src={product.image_url}
+                    alt={product.name}
+                    fill
+                    className="object-contain p-2"
+                    sizes="176px"
+                  />
+                </div>
               </div>
-              <span className="text-sm font-semibold text-gray-700">적응증 / 효능효과</span>
-            </div>
-            <p className="text-gray-600 text-sm leading-relaxed">{product.indication}</p>
+            ) : (
+              <div className="mt-4 flex justify-center">
+                <div className="w-44 h-44 rounded-2xl bg-gradient-to-br from-green-50 to-emerald-100 border border-green-100 flex flex-col items-center justify-center">
+                  <span className="text-5xl mb-2">💊</span>
+                  <span className="text-xs text-green-500 font-medium">{product.name}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ─── 적응증 배너 ─── */}
+        {(product.description || product.indication) && (
+          <div className="bg-green-600 mx-0 px-5 py-3.5 flex items-start gap-3 mb-3">
+            <span className="text-white text-lg mt-0.5 flex-shrink-0">✅</span>
+            <p className="text-white text-sm font-medium leading-snug">
+              {product.description ?? product.indication}
+            </p>
           </div>
         )}
 
-        {/* Notes */}
+        {/* ─── 사용 부위 ─── */}
+        {product.usage_areas && product.usage_areas.length > 0 && (
+          <SectionCard className="mb-3">
+            <SectionHeader icon="📍" title="이런 부위에 사용해요" />
+            <div className="flex flex-wrap justify-around px-3 pb-4 pt-2 gap-2">
+              {product.usage_areas.map((area, i) => (
+                <div key={i} className="flex flex-col items-center gap-1 min-w-[56px]">
+                  <div className="w-14 h-14 bg-green-50 rounded-full flex items-center justify-center text-2xl border-2 border-green-100">
+                    {area.icon}
+                  </div>
+                  <span className="text-xs text-gray-600 font-medium text-center leading-tight">{area.name}</span>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
+        )}
+
+        {/* ─── 사용 방법 ─── */}
+        {(product.usage_frequency || product.usage_method || product.usage_target) && (
+          <SectionCard className="mb-3">
+            <SectionHeader icon="💡" title="사용 방법" />
+            <div className="grid grid-cols-3 gap-0 border-t border-gray-50 mx-4 mb-3">
+              {product.usage_frequency && (
+                <div className="flex flex-col items-center py-4 px-2 border-r border-gray-100 last:border-r-0">
+                  <span className="text-2xl mb-1.5">🕐</span>
+                  <span className="text-xs text-gray-400 mb-1">사용 횟수</span>
+                  <span className="text-sm font-bold text-gray-800 text-center leading-tight">{product.usage_frequency}</span>
+                </div>
+              )}
+              {product.usage_method && (
+                <div className="flex flex-col items-center py-4 px-2 border-r border-gray-100 last:border-r-0">
+                  <span className="text-2xl mb-1.5">🤲</span>
+                  <span className="text-xs text-gray-400 mb-1">사용 방법</span>
+                  <span className="text-sm font-bold text-gray-800 text-center leading-tight">{product.usage_method}</span>
+                </div>
+              )}
+              {product.usage_target && (
+                <div className="flex flex-col items-center py-4 px-2">
+                  <span className="text-2xl mb-1.5">🎯</span>
+                  <span className="text-xs text-gray-400 mb-1">사용 부위</span>
+                  <span className="text-sm font-bold text-gray-800 text-center leading-tight">{product.usage_target}</span>
+                </div>
+              )}
+            </div>
+            {product.usage_note && (
+              <div className="mx-4 mb-4 bg-green-50 rounded-xl px-3 py-2.5 flex items-start gap-2">
+                <span className="text-green-500 text-sm mt-0.5 flex-shrink-0">✔</span>
+                <p className="text-xs text-green-700 leading-snug">{product.usage_note}</p>
+              </div>
+            )}
+          </SectionCard>
+        )}
+
+        {/* ─── 사용 전 체크 ─── */}
+        {product.precautions && product.precautions.length > 0 && (
+          <SectionCard className="mb-3">
+            <div className="bg-amber-50 px-4 pt-4 pb-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xl">⚠️</span>
+                <span className="font-bold text-amber-800 text-sm">사용 전 체크하세요</span>
+              </div>
+              <ul className="space-y-2">
+                {product.precautions.map((item, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="text-amber-500 text-sm mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-sm text-amber-900 leading-snug">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </SectionCard>
+        )}
+
+        {/* ─── 금기 + 부작용 (2열) ─── */}
+        {(product.donts?.length || product.side_effects?.length) ? (
+          <div className="grid grid-cols-2 gap-3 mb-3 px-0">
+            {product.donts && product.donts.length > 0 && (
+              <div className="bg-red-50 rounded-2xl shadow-sm px-3 pt-3 pb-4">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="text-base">🚫</span>
+                  <span className="text-xs font-bold text-red-700 leading-tight">이렇게 사용하면 안돼요</span>
+                </div>
+                <ul className="space-y-1.5">
+                  {product.donts.map((item, i) => (
+                    <li key={i} className="flex items-start gap-1.5">
+                      <span className="text-red-400 text-xs mt-0.5 flex-shrink-0">✕</span>
+                      <span className="text-xs text-red-800 leading-snug">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {product.side_effects && product.side_effects.length > 0 && (
+              <div className="bg-red-50 rounded-2xl shadow-sm px-3 pt-3 pb-4">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <span className="text-base">💢</span>
+                  <span className="text-xs font-bold text-red-700 leading-tight">나타날 수 있는 부작용</span>
+                </div>
+                <ul className="space-y-1.5">
+                  {product.side_effects.map((item, i) => (
+                    <li key={i} className="flex items-start gap-1.5">
+                      <span className="text-red-400 text-xs mt-0.5 flex-shrink-0">!</span>
+                      <span className="text-xs text-red-800 leading-snug">{item}</span>
+                    </li>
+                  ))}
+                </ul>
+                {product.side_effects_note && (
+                  <p className="text-xs text-red-500 mt-2 leading-snug">{product.side_effects_note}</p>
+                )}
+              </div>
+            )}
+          </div>
+        ) : null}
+
+        {/* ─── 사용 팁 ─── */}
+        {product.tips && product.tips.length > 0 && (
+          <SectionCard className="mb-3">
+            <div className="bg-green-50 px-4 pt-4 pb-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xl">✨</span>
+                <span className="font-bold text-green-800 text-sm">사용 팁</span>
+              </div>
+              <ul className="space-y-2">
+                {product.tips.map((item, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="text-green-500 text-sm mt-0.5 flex-shrink-0">✓</span>
+                    <span className="text-sm text-green-900 leading-snug">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </SectionCard>
+        )}
+
+        {/* ─── 추천 대상 ─── */}
+        {product.recommended_for && product.recommended_for.length > 0 && (
+          <SectionCard className="mb-3">
+            <div className="bg-blue-50 px-4 pt-4 pb-4">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xl">👤</span>
+                <span className="font-bold text-blue-800 text-sm">이런 분들에게 추천해요</span>
+              </div>
+              <ul className="space-y-2">
+                {product.recommended_for.map((item, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <span className="text-blue-500 text-sm mt-0.5 flex-shrink-0">✓</span>
+                    <span className="text-sm text-blue-900 leading-snug">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </SectionCard>
+        )}
+
+        {/* ─── 위치 + 성분 (2칸) ─── */}
+        {(product.store_location || product.ingredients) && (
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            {product.store_location && (
+              <SectionCard>
+                <div className="px-3 py-3.5">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className="text-base">🗺️</span>
+                    <span className="text-xs font-bold text-gray-600">약국 내 위치</span>
+                  </div>
+                  <p className="text-sm font-semibold text-gray-900">{product.store_location}</p>
+                </div>
+              </SectionCard>
+            )}
+            {product.ingredients && (
+              <SectionCard>
+                <div className="px-3 py-3.5">
+                  <div className="flex items-center gap-1.5 mb-1.5">
+                    <span className="text-base">🔬</span>
+                    <span className="text-xs font-bold text-gray-600">주요 성분</span>
+                  </div>
+                  <p className="text-xs text-gray-700 leading-snug">{product.ingredients}</p>
+                </div>
+              </SectionCard>
+            )}
+          </div>
+        )}
+
+        {/* ─── 기존 indication (구 버전 호환) ─── */}
+        {product.indication && !product.description && (
+          <SectionCard className="mb-3">
+            <SectionHeader icon="📋" title="적응증 / 효능효과" />
+            <p className="px-4 pb-4 text-sm text-gray-600 leading-relaxed">{product.indication}</p>
+          </SectionCard>
+        )}
+
+        {/* ─── 참고사항 (구 버전 호환) ─── */}
         {(product.note1 || product.note2) && (
-          <div className="bg-white rounded-2xl p-5 mb-4 shadow-sm border border-gray-100">
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 bg-amber-100 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <span className="text-sm font-semibold text-gray-700">참고사항</span>
+          <SectionCard className="mb-3">
+            <SectionHeader icon="ℹ️" title="참고사항" />
+            <div className="px-4 pb-4">
+              {product.note1 && <p className="text-sm text-gray-600 mb-1">{product.note1}</p>}
+              {product.note2 && <p className="text-sm text-gray-600">{product.note2}</p>}
             </div>
-            {product.note1 && <p className="text-gray-600 text-sm leading-relaxed mb-2">{product.note1}</p>}
-            {product.note2 && <p className="text-gray-600 text-sm leading-relaxed">{product.note2}</p>}
-          </div>
+          </SectionCard>
         )}
 
-        {/* Barcode */}
-        {product.barcode && (
-          <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100">
-            <div className="text-xs text-gray-400 mb-1 font-medium uppercase tracking-wide">바코드</div>
-            <div className="font-mono text-gray-700 text-sm tracking-widest">{product.barcode}</div>
-          </div>
-        )}
+        {/* ─── CTA 버튼 ─── */}
+        <div className="grid grid-cols-2 gap-3 mb-3 px-0">
+          <button className="bg-green-600 text-white font-semibold text-sm py-3.5 rounded-2xl shadow-sm active:scale-95 transition-transform">
+            🗺️ 약국 내 위치 보기
+          </button>
+          <button className="bg-white border-2 border-green-600 text-green-700 font-semibold text-sm py-3.5 rounded-2xl shadow-sm active:scale-95 transition-transform">
+            💬 약사에게 문의하기
+          </button>
+        </div>
 
-        {/* Footer */}
-        <div className="mt-8 text-center">
-          <div className="inline-flex items-center gap-2 text-xs text-gray-400">
-            <div className="w-4 h-4 bg-blue-600 rounded flex items-center justify-center">
-              <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            약국 QR 제품 조회 시스템
-          </div>
+        {/* ─── 면책 문구 ─── */}
+        <div className="bg-white rounded-2xl px-4 py-3 text-center">
+          <p className="text-xs text-gray-400 leading-relaxed">
+            본 정보는 일반적인 안내 목적으로 제공됩니다.<br />
+            정확한 복약 지도는 약사에게 문의하세요.
+          </p>
+          <p className="text-xs text-gray-300 mt-1">약국 QR 제품 조회 시스템 V2</p>
         </div>
       </div>
     </div>
