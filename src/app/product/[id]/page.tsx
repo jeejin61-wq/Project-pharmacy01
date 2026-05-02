@@ -112,7 +112,7 @@ export default async function ProductPage({ params }: Props) {
         <div className="bg-white mb-3">
           <div className="px-4 pt-5 pb-1 flex items-center gap-2">
             {product.category && (
-              <span className="inline-flex items-center bg-[#dcfce7] text-[#16a34a] text-xs font-semibold px-2.5 py-1 rounded-full">
+              <span className="inline-flex items-center bg-[#e0f2fe] text-[#0284c7] text-xs font-semibold px-2.5 py-1 rounded-full">
                 {product.category}
               </span>
             )}
@@ -126,17 +126,14 @@ export default async function ProductPage({ params }: Props) {
 
             <div className="flex items-end gap-2 mt-3">
               {priceFormatted ? (
-                <span className="text-3xl font-extrabold text-[#16a34a]">{priceFormatted}</span>
+                <span className="text-3xl font-extrabold text-[#0ea5e9]">{priceFormatted}</span>
               ) : (
                 <span className="text-xl font-bold text-gray-400">가격 정보 없음</span>
               )}
-              {product.price_per_unit && (
-                <span className="text-xs text-gray-400 mb-1">{product.price_per_unit}</span>
-              )}
             </div>
 
-            {/* 제품 이미지 */}
-            {product.image_url ? (
+            {/* 제품 이미지 - 실제 이미지가 있을 때만 표시 */}
+            {product.image_url && (
               <div className="mt-4 flex justify-center">
                 <div className="relative w-44 h-44 rounded-2xl overflow-hidden border border-gray-100 bg-gray-50">
                   <Image
@@ -148,22 +145,15 @@ export default async function ProductPage({ params }: Props) {
                   />
                 </div>
               </div>
-            ) : (
-              <div className="mt-4 flex justify-center">
-                <div className="w-44 h-44 rounded-2xl bg-[#dcfce7] flex flex-col items-center justify-center">
-                  <FlaskConical size={44} strokeWidth={1.5} className="text-[#16a34a] mb-2" />
-                  <span className="text-xs text-[#16a34a] font-medium">{product.name}</span>
-                </div>
-              </div>
             )}
           </div>
         </div>
 
         {/* ─── 적응증 배너 ─── */}
         {(product.description || product.indication) && (
-          <div className="bg-[#dcfce7] mx-0 px-5 py-3.5 flex items-start gap-3 mb-3">
-            <Info size={16} strokeWidth={2} className="text-[#16a34a] mt-0.5 flex-shrink-0" />
-            <p className="text-[#16a34a] text-sm font-medium leading-snug">
+          <div className="bg-[#f0fdf4] mx-0 px-5 py-3.5 flex items-start gap-3 mb-3">
+            <Info size={16} strokeWidth={2} className="text-[#4ade80] mt-0.5 flex-shrink-0" />
+            <p className="text-[#15803d] text-sm font-medium leading-snug">
               {product.description ?? product.indication}
             </p>
           </div>
@@ -176,7 +166,7 @@ export default async function ProductPage({ params }: Props) {
             <div className="flex flex-wrap justify-around px-3 pb-4 pt-2 gap-2">
               {product.usage_areas.map((area, i) => (
                 <div key={i} className="flex flex-col items-center gap-1.5 min-w-[56px]">
-                  <div className="w-14 h-14 bg-[#dcfce7] rounded-full flex items-center justify-center text-[#16a34a]">
+                  <div className="w-14 h-14 bg-[#f0f9ff] rounded-full flex items-center justify-center text-[#0ea5e9]">
                     <UsageAreaIcon iconName={area.icon} />
                   </div>
                   <span className="text-xs text-gray-600 font-medium text-center leading-tight">{area.name}</span>
@@ -231,16 +221,16 @@ export default async function ProductPage({ params }: Props) {
         {/* ─── 사용 전 체크 ─── */}
         {product.precautions && product.precautions.length > 0 && (
           <SectionCard className="mb-3">
-            <div className="bg-[#fef9c3] px-4 pt-4 pb-4">
+            <div className="bg-[#fffbeb] px-4 pt-4 pb-4">
               <div className="flex items-center gap-2 mb-3">
-                <TriangleAlert size={15} strokeWidth={2} className="text-[#ca8a04]" />
-                <span className="font-bold text-[#ca8a04] text-sm">사용 전 체크하세요</span>
+                <TriangleAlert size={15} strokeWidth={2} className="text-[#d97706]" />
+                <span className="font-bold text-[#92400e] text-sm">사용 전 체크하세요</span>
               </div>
               <ul className="space-y-2">
                 {product.precautions.map((item, i) => (
                   <li key={i} className="flex items-start gap-2">
-                    <span className="text-[#ca8a04] text-sm mt-0.5 flex-shrink-0">•</span>
-                    <span className="text-sm text-[#ca8a04] leading-snug">{item}</span>
+                    <span className="text-[#d97706] text-sm mt-0.5 flex-shrink-0">•</span>
+                    <span className="text-sm text-[#78350f] leading-snug">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -252,37 +242,37 @@ export default async function ProductPage({ params }: Props) {
         {(product.donts?.length || product.side_effects?.length) ? (
           <div className="grid grid-cols-2 gap-3 mb-3 px-0">
             {product.donts && product.donts.length > 0 && (
-              <div className="bg-[#ffe4e6] rounded-2xl shadow-sm px-3 pt-3 pb-4">
+              <div className="bg-[#fff1f2] rounded-2xl shadow-sm px-3 pt-3 pb-4">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Ban size={14} strokeWidth={2} className="text-[#e11d48]" />
-                  <span className="text-xs font-bold text-[#e11d48] leading-tight">이렇게 사용하면 안돼요</span>
+                  <Ban size={14} strokeWidth={2} className="text-[#f43f5e]" />
+                  <span className="text-xs font-bold text-[#9f1239] leading-tight">이렇게 사용하면 안돼요</span>
                 </div>
                 <ul className="space-y-1.5">
                   {product.donts.map((item, i) => (
                     <li key={i} className="flex items-start gap-1.5">
-                      <span className="text-[#e11d48] text-xs mt-0.5 flex-shrink-0">✕</span>
-                      <span className="text-xs text-[#e11d48] leading-snug">{item}</span>
+                      <span className="text-[#f43f5e] text-xs mt-0.5 flex-shrink-0">✕</span>
+                      <span className="text-xs text-[#881337] leading-snug">{item}</span>
                     </li>
                   ))}
                 </ul>
               </div>
             )}
             {product.side_effects && product.side_effects.length > 0 && (
-              <div className="bg-[#ffe4e6] rounded-2xl shadow-sm px-3 pt-3 pb-4">
+              <div className="bg-[#fff1f2] rounded-2xl shadow-sm px-3 pt-3 pb-4">
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Zap size={14} strokeWidth={2} className="text-[#e11d48]" />
-                  <span className="text-xs font-bold text-[#e11d48] leading-tight">나타날 수 있는 부작용</span>
+                  <Zap size={14} strokeWidth={2} className="text-[#f43f5e]" />
+                  <span className="text-xs font-bold text-[#9f1239] leading-tight">나타날 수 있는 부작용</span>
                 </div>
                 <ul className="space-y-1.5">
                   {product.side_effects.map((item, i) => (
                     <li key={i} className="flex items-start gap-1.5">
-                      <span className="text-[#e11d48] text-xs mt-0.5 flex-shrink-0">!</span>
-                      <span className="text-xs text-[#e11d48] leading-snug">{item}</span>
+                      <span className="text-[#f43f5e] text-xs mt-0.5 flex-shrink-0">!</span>
+                      <span className="text-xs text-[#881337] leading-snug">{item}</span>
                     </li>
                   ))}
                 </ul>
                 {product.side_effects_note && (
-                  <p className="text-xs text-[#e11d48] mt-2 leading-snug opacity-80">{product.side_effects_note}</p>
+                  <p className="text-xs text-[#881337] mt-2 leading-snug opacity-80">{product.side_effects_note}</p>
                 )}
               </div>
             )}
@@ -292,16 +282,16 @@ export default async function ProductPage({ params }: Props) {
         {/* ─── 사용 팁 ─── */}
         {product.tips && product.tips.length > 0 && (
           <SectionCard className="mb-3">
-            <div className="bg-[#dcfce7] px-4 pt-4 pb-4">
+            <div className="bg-[#f0fdf4] px-4 pt-4 pb-4">
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles size={15} strokeWidth={2} className="text-[#16a34a]" />
-                <span className="font-bold text-[#16a34a] text-sm">사용 팁</span>
+                <Sparkles size={15} strokeWidth={2} className="text-[#4ade80]" />
+                <span className="font-bold text-[#15803d] text-sm">사용 팁</span>
               </div>
               <ul className="space-y-2">
                 {product.tips.map((item, i) => (
                   <li key={i} className="flex items-start gap-2">
-                    <span className="text-[#16a34a] text-sm mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-sm text-[#16a34a] leading-snug">{item}</span>
+                    <span className="text-[#4ade80] text-sm mt-0.5 flex-shrink-0">✓</span>
+                    <span className="text-sm text-[#166534] leading-snug">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -312,16 +302,16 @@ export default async function ProductPage({ params }: Props) {
         {/* ─── 추천 대상 ─── */}
         {product.recommended_for && product.recommended_for.length > 0 && (
           <SectionCard className="mb-3">
-            <div className="bg-[#dbeafe] px-4 pt-4 pb-4">
+            <div className="bg-[#eff6ff] px-4 pt-4 pb-4">
               <div className="flex items-center gap-2 mb-3">
-                <UserCheck size={15} strokeWidth={2} className="text-[#2563eb]" />
-                <span className="font-bold text-[#2563eb] text-sm">이런 분들에게 추천해요</span>
+                <UserCheck size={15} strokeWidth={2} className="text-[#60a5fa]" />
+                <span className="font-bold text-[#1e40af] text-sm">이런 분들에게 추천해요</span>
               </div>
               <ul className="space-y-2">
                 {product.recommended_for.map((item, i) => (
                   <li key={i} className="flex items-start gap-2">
-                    <span className="text-[#2563eb] text-sm mt-0.5 flex-shrink-0">✓</span>
-                    <span className="text-sm text-[#2563eb] leading-snug">{item}</span>
+                    <span className="text-[#60a5fa] text-sm mt-0.5 flex-shrink-0">✓</span>
+                    <span className="text-sm text-[#1e3a5f] leading-snug">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -350,7 +340,7 @@ export default async function ProductPage({ params }: Props) {
 
         {/* ─── CTA 버튼 ─── */}
         <div className="mb-3 px-0">
-          <button className="w-full bg-[#dcfce7] text-[#16a34a] font-semibold text-sm py-3.5 rounded-2xl shadow-sm active:scale-95 transition-transform flex items-center justify-center gap-2">
+          <button className="w-full bg-[#0ea5e9] text-white font-semibold text-sm py-3.5 rounded-2xl shadow-sm active:scale-95 transition-transform flex items-center justify-center gap-2">
             <MessageCircle size={16} strokeWidth={2} />
             약사에게 문의하기
           </button>
