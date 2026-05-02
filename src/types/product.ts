@@ -3,6 +3,22 @@ export interface UsageArea {
   icon: string
 }
 
+export interface ProductTranslation {
+  name?: string
+  description?: string
+  usage_frequency?: string
+  usage_method?: string
+  usage_target?: string
+  usage_note?: string
+  precautions?: string[]
+  donts?: string[]
+  side_effects?: string[]
+  side_effects_note?: string
+  tips?: string[]
+  recommended_for?: string[]
+  usage_areas?: UsageArea[]
+}
+
 export interface Product {
   id: number
   barcode: string | null
@@ -36,6 +52,9 @@ export interface Product {
   store_location: string | null
   ingredients: string | null
   description: string | null
+
+  // V2.2 다국어 번역
+  translations: Record<string, ProductTranslation> | null
 }
 
 export type ProductInsert = Omit<Product, 'id' | 'created_at'>

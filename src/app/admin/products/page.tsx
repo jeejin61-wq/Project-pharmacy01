@@ -2,17 +2,40 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
-import { Product, ProductInsert, ProductUpdate } from '@/types/product'
+import { Product, ProductInsert, ProductUpdate, ProductTranslation } from '@/types/product'
 import Link from 'next/link'
 
 // ─── 상수 ───────────────────────────────────────────────────
 
 const UNITS = ['포', '캡슐', '정', '액', '병', '개', '박스', 'mL', 'g']
 const CATEGORIES = ['일반의약품', '전문의약품', '건강기능식품', '기타']
-const TABS = ['기본정보', '사용방법', '주의사항', '부가정보'] as const
+const TABS = ['기본정보', '사용방법', '주의사항', '부가정보', '번역'] as const
 type Tab = typeof TABS[number]
 
+type TransLang = 'en' | 'zh' | 'ja'
+const TRANS_LANGS: { key: TransLang; label: string }[] = [
+  { key: 'en', label: 'English' },
+  { key: 'zh', label: '中文' },
+  { key: 'ja', label: '日本語' },
+]
+
 // ─── 빈 폼 ──────────────────────────────────────────────────
+
+const emptyTranslation: ProductTranslation = {
+  name: '',
+  description: '',
+  usage_frequency: '',
+  usage_method: '',
+  usage_target: '',
+  usage_note: '',
+  precautions: [],
+  donts: [],
+  side_effects: [],
+  side_effects_note: '',
+  tips: [],
+  recommended_for: [],
+  usage_areas: [],
+}
 
 const emptyForm: ProductInsert = {
   barcode: '',
@@ -43,6 +66,7 @@ const emptyForm: ProductInsert = {
   store_location: null,
   ingredients: null,
   description: null,
+  translations: null,
 }
 
 // ─── 유틸 ───────────────────────────────────────────────────
@@ -108,6 +132,156 @@ function StringListEditor({
   )
 }
 
+// ─── 번역 편집기 (단일 언어) ──────────────────────────────────
+
+function TranslationEditor({
+  lang,
+  label,
+  value,
+  onChange,
+  inputCls,
+  labelCls,
+}: {
+  lang: TransLang
+  label: string
+  value: ProductTranslation
+  onChange: (v: ProductTranslation) => void
+  inputCls: string
+  labelCls: string
+}) {
+  const set = (key: keyof ProductTranslation, val: unknown) => onChange({ ...value, [key]: val })
+
+  const getArr = (key: keyof ProductTranslation): string[] => {
+    const v = value[key]
+    if (Array.isArray(v)) return v as string[]
+    return []
+  }
+
+  const usageAreas = value.usage_areas ?? []
+  const setUsageAreas = (areas: { name: string; icon: string }[]) => set('usage_areas', areas)
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center gap-2 mb-3">
+        <span className="text-xs font-semibold bg-[#0ea5e9] text-white px-2.5 py-1 rounded-full">{label}</span>
+        <span className="text-xs text-gray-400">번역 입력 (비워두면 한국어로 표시)</span>
+      </div>
+
+      {/* 제품명 */}
+      <div>
+        <label className={labelCls}>제품명 ({label})</label>
+        <input className={inputCls} value={value.name ?? ''} onChange={(e) => set('name', e.target.value)} placeholder="Product name" />
+      </div>
+
+      {/* 한줄 설명 */}
+      <div>
+        <label className={labelCls}>한줄 설명 ({label})</label>
+        <input className={inputCls} value={value.description ?? ''} onChange={(e) => set('description', e.target.value)} placeholder="Short description" />
+      </div>
+
+      {/* 사용 횟수 */}
+      <div>
+        <label className={labelCls}>사용 횟수 ({label})</label>
+        <input className={inputCls} value={value.usage_frequency ?? ''} onChange={(e) => set('usage_frequency', e.target.value)} placeholder="Usage frequency" />
+      </div>
+
+      {/* 사용 방법 */}
+      <div>
+        <label className={labelCls}>사용 방법 ({label})</label>
+        <input className={inputCls} value={value.usage_method ?? ''} onChange={(e) => set('usage_method', e.target.value)} placeholder="Usage method" />
+      </div>
+
+      {/* 사용 부위/타이밍 */}
+      <div>
+        <label className={labelCls}>사용 부위/타이밍 ({label})</label>
+        <input className={inputCls} value={value.usage_target ?? ''} onChange={(e) => set('usage_target', e.target.value)} placeholder="Usage target / timing" />
+      </div>
+
+      {/* 추가 안내 */}
+      <div>
+        <label className={labelCls}>추가 안내 ({label})</label>
+        <input className={inputCls} value={value.usage_note ?? ''} onChange={(e) => set('usage_note', e.target.value)} placeholder="Additional usage note" />
+      </div>
+
+      {/* 사용 부위 아이콘 */}
+      <div>
+        <div className="flex items-center justify-between mb-1.5">
+          <label className="block text-xs font-medium text-gray-500">사용 부위 아이콘 ({label})</label>
+          <button type="button" onClick={() => setUsageAreas([...usageAreas, { name: '', icon: 'Activity' }])} className="text-xs text-blue-600 hover:underline font-medium">
+            + 항목 추가
+          </button>
+        </div>
+        <div className="space-y-2">
+          {usageAreas.map((area, i) => (
+            <div key={i} className="flex gap-1.5 items-center">
+              <input
+                className="w-24 border border-gray-200 rounded-lg px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={area.icon}
+                onChange={(e) => setUsageAreas(usageAreas.map((a, idx) => idx === i ? { ...a, icon: e.target.value } : a))}
+                placeholder="Wind"
+              />
+              <input
+                className="flex-1 border border-gray-200 rounded-lg px-2.5 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={area.name}
+                onChange={(e) => setUsageAreas(usageAreas.map((a, idx) => idx === i ? { ...a, name: e.target.value } : a))}
+                placeholder="Area name"
+              />
+              <button type="button" onClick={() => setUsageAreas(usageAreas.filter((_, idx) => idx !== i))} className="text-red-400 hover:text-red-600 px-2">✕</button>
+            </div>
+          ))}
+          {usageAreas.length === 0 && <p className="text-xs text-gray-400 italic py-1">항목 없음</p>}
+        </div>
+      </div>
+
+      {/* 사용 전 체크사항 */}
+      <StringListEditor
+        label={`사용 전 체크사항 (${label})`}
+        values={getArr('precautions')}
+        onChange={(v) => set('precautions', v)}
+        placeholder="Precaution item"
+      />
+
+      {/* 금기 */}
+      <StringListEditor
+        label={`금기 (${label})`}
+        values={getArr('donts')}
+        onChange={(v) => set('donts', v)}
+        placeholder="Don't item"
+      />
+
+      {/* 부작용 */}
+      <StringListEditor
+        label={`부작용 (${label})`}
+        values={getArr('side_effects')}
+        onChange={(v) => set('side_effects', v)}
+        placeholder="Side effect"
+      />
+
+      {/* 부작용 참고 */}
+      <div>
+        <label className={labelCls}>부작용 참고 문구 ({label})</label>
+        <textarea rows={2} className={inputCls} value={value.side_effects_note ?? ''} onChange={(e) => set('side_effects_note', e.target.value)} placeholder="Side effects note..." />
+      </div>
+
+      {/* 팁 */}
+      <StringListEditor
+        label={`사용 팁 (${label})`}
+        values={getArr('tips')}
+        onChange={(v) => set('tips', v)}
+        placeholder="Tip item"
+      />
+
+      {/* 추천 대상 */}
+      <StringListEditor
+        label={`추천 대상 (${label})`}
+        values={getArr('recommended_for')}
+        onChange={(v) => set('recommended_for', v)}
+        placeholder="Recommended for..."
+      />
+    </div>
+  )
+}
+
 // ─── 폼 ─────────────────────────────────────────────────────
 
 function ProductForm({
@@ -117,6 +291,7 @@ function ProductForm({
 }) {
   const [form, setForm] = useState<ProductInsert>(initial)
   const [tab, setTab] = useState<Tab>('기본정보')
+  const [transLang, setTransLang] = useState<TransLang>('en')
 
   const set = (key: keyof ProductInsert, value: unknown) => {
     setForm((f) => ({ ...f, [key]: value }))
@@ -141,6 +316,19 @@ function ProductForm({
   // usage_areas 전용 (객체 배열)
   const usageAreas = form.usage_areas ?? []
   const setUsageAreas = (areas: { name: string; icon: string }[]) => set('usage_areas', areas)
+
+  // 번역 상태 관리
+  const translations: Record<string, ProductTranslation> = (form.translations as Record<string, ProductTranslation>) ?? {}
+
+  const getTranslation = (lang: TransLang): ProductTranslation => ({
+    ...emptyTranslation,
+    ...(translations[lang] ?? {}),
+  })
+
+  const setTranslation = (lang: TransLang, t: ProductTranslation) => {
+    const updated = { ...translations, [lang]: t }
+    set('translations', updated)
+  }
 
   return (
     <form onSubmit={handleSubmit}>
@@ -336,6 +524,33 @@ function ProductForm({
             </div>
           </div>
         )}
+
+        {/* ── 번역 탭 ── */}
+        {tab === '번역' && (
+          <div>
+            {/* 언어 서브탭 */}
+            <div className="flex gap-1 mb-4 bg-gray-50 p-1 rounded-xl border border-gray-100">
+              {TRANS_LANGS.map(({ key, label }) => (
+                <button
+                  key={key} type="button"
+                  onClick={() => setTransLang(key)}
+                  className={`flex-1 text-xs font-medium py-2 rounded-lg transition-colors ${transLang === key ? 'bg-[#0ea5e9] text-white shadow-sm' : 'text-gray-500 hover:text-[#0ea5e9]'}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            <TranslationEditor
+              lang={transLang}
+              label={TRANS_LANGS.find((l) => l.key === transLang)!.label}
+              value={getTranslation(transLang)}
+              onChange={(v) => setTranslation(transLang, v)}
+              inputCls={inputCls}
+              labelCls={labelCls}
+            />
+          </div>
+        )}
       </div>
 
       <div className="flex gap-2 pt-4 border-t border-gray-100 mt-4">
@@ -431,6 +646,7 @@ export default function AdminProductsPage() {
     store_location: p.store_location ?? null,
     ingredients: p.ingredients ?? null,
     description: p.description ?? null,
+    translations: p.translations ?? null,
   })
 
   return (
@@ -493,6 +709,7 @@ export default function AdminProductsPage() {
                     <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">가격</th>
                     <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden md:table-cell">단위</th>
                     <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">재고</th>
+                    <th className="text-center px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide hidden lg:table-cell">번역</th>
                     <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide"></th>
                   </tr>
                 </thead>
@@ -524,6 +741,22 @@ export default function AdminProductsPage() {
                         }`}>
                           {p.stock ?? '-'}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 text-center hidden lg:table-cell">
+                        <div className="flex items-center justify-center gap-0.5">
+                          {(['en', 'zh', 'ja'] as TransLang[]).map((lang) => (
+                            <span
+                              key={lang}
+                              className={`text-xs px-1.5 py-0.5 rounded font-medium ${
+                                p.translations?.[lang] && Object.keys(p.translations[lang]).length > 0
+                                  ? 'bg-[#e0f2fe] text-[#0284c7]'
+                                  : 'bg-gray-100 text-gray-400'
+                              }`}
+                            >
+                              {lang}
+                            </span>
+                          ))}
+                        </div>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
